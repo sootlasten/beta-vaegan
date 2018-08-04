@@ -9,14 +9,16 @@ import random
 from functools import reduce, wraps
 import torch
 
+from .vis_utils import Visualizer
 from loaders.dsprites import get_dsprites_dataloader
-from loaders.mnist import get_mnist_dataloader
+from loaders.mnist import get_mnist_dataloader, get_mnist_test
 from loaders.blobs import get_blobs_dataloader
 
 
-DATASETS = {'mnist': [(1, 32, 32), get_mnist_dataloader],
-            'dsprites': [(1, 64, 64), get_dsprites_dataloader],
-            'blobs': [(1, 32, 32), get_blobs_dataloader]}
+DATASETS = {
+  'mnist': [(1, 32, 32), get_mnist_dataloader, get_mnist_test],
+  'dsprites': [(1, 64, 64), get_dsprites_dataloader, None],
+  'blobs': [(1, 32, 32), get_blobs_dataloader, None]}
 
 
 def _get_dataset(data_arg):
@@ -68,8 +70,9 @@ def get_common_parser():
   parser.add_argument('--steps', type=int, default=100000,
                       help='number of batches to train for')
   parser.add_argument('--no-cuda', action='store_true', default=False)
-  parser.add_argument('--nb-test', type=int, default=10,
-                      help='number of test samples to visualize the recons of')
+  parser.add_argument('--nb-trav', type=int, default=10,
+                      help='number of samples to visualize on the \
+                            traversal canvas.')
   parser.add_argument('--seed', type=int, default=1)
   parser.add_argument('--log-interval', type=int, default=10)
   parser.add_argument('--save-interval', type=int, default=200)
@@ -87,27 +90,28 @@ def base_runner(setup_models):
     device = torch.device('cuda' if use_cuda else 'cpu')
     
     # data loader
-    img_dims, dataloader = _get_dataset(args.dataset)
+    img_dims, dataloader, testdata = _get_dataset(args.dataset)
     dataloader = dataloader(args.batch_size)
 
-    # test images to reconstruct during training
-    dataset_size = len(dataloader.dataset)
-    indices = [3] + random.sample(range(1, dataset_size), args.nb_test-1)
-    testimgs = torch.empty(args.nb_test, *img_dims).to(device)
-    for i, img_idx in enumerate(indices): 
-      testimgs[i, 0] = torch.tensor(dataloader.dataset[img_idx])
-    
     # models and optimizers
     cont_dim, cat_dims = _check_dim_args(args.cont_dim, args.cat_dims)
     nets, optimizers = setup_models(img_dims, cont_dim, cat_dims, args)
     for net in nets.values(): net.to(device)
-    
+  
     # log directory
     if os.path.isdir(args.logdir): shutil.rmtree(args.logdir)
     os.makedirs(args.logdir)
-
+  
+    # visualizer
+    if not testdata:
+      raise NotImplementedError("Gathering test data for this \
+        dataset not implemented yet!")
+    testdata = testdata()
+    vis = Visualizer(nets['vae'], device,   
+      args.logdir, testdata, args.nb_trav)
+    
     # train
-    trainer = trainer(args, nets, optimizers, dataloader, testimgs, device)
+    trainer = trainer(args, nets, optimizers, dataloader, vis, device)
     trainer.put_in_work()
   return wrapper
 

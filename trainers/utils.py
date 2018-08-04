@@ -31,16 +31,16 @@ def overrides(interface_class):
 
 
 class BaseTrainer(ABC):
-  def __init__(self, args, nets, opt, dataloader, testimgs, device):
+  def __init__(self, args, nets, opt, dataloader, vis, device):
     self.args = args
     self.nets = nets
     self.opt = opt
     self.dataloader = dataloader
-    self.testimgs = testimgs
+    self.vis = vis
     self.device = device
     self.logger = Logger(self.args.steps)
   
-  def _get_cap_loss(self, kl, step):
+  def get_cap_loss(self, kl, step):
     cap = (self.args.cap_max - self.args.cap_min)* \
       step/self.args.cap_iters
     cap = min(cap, self.args.cap_max)

@@ -3,7 +3,7 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from utils.log_utils import traverse
+from vis.vis import traverse
 from .utils import BaseTrainer, kl_gauss_unag, \
   kl_cat_unag, sse_loss, overrides  
 
@@ -60,7 +60,7 @@ class Trainer(BaseTrainer):
         if 'cont' in dist_params.keys():
           mu, logvar = dist_params['cont']
           kl_cont_dw = kl_gauss_unag(mu, logvar).mean(0)
-          cont_cap_loss = self._get_cap_loss(kl_cont_dw.sum(), step)
+          cont_cap_loss = self.get_cap_loss(kl_cont_dw.sum(), step)
  
         # KL for categorical
         kl_cats = torch.empty(0).to(self.device)
@@ -69,7 +69,7 @@ class Trainer(BaseTrainer):
           for logits in dist_params['cat']:
             kl_cat = kl_cat_unag(logits).sum(1).mean()
             kl_cats = torch.cat((kl_cats, kl_cat.view(1)))
-          cat_cap_loss = self._get_cap_loss(kl_cats.sum(), step)
+          cat_cap_loss = self.get_cap_loss(kl_cats.sum(), step)
 
         self.opt['enc'].zero_grad()
         enc_loss = fw_sse + cont_cap_loss + cat_cap_loss
@@ -93,6 +93,9 @@ class Trainer(BaseTrainer):
           self.logger.print(step)
         
         if not step % self.args.save_interval:
+          filepath = os.path.join(self.args.logdir, 'model.ckpt')
+          torch.save(self.nets['vae'], filepath)
+
           filename = 'traversal_' + str(step) + '.png'
           filepath = os.path.join(self.args.logdir, filename)
           traverse(self.nets['vae'], self.testimgs, filepath)

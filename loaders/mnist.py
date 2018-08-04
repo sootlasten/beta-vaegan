@@ -90,3 +90,13 @@ def get_mnist_dataloader(batch_size, shuffle=True, path_to_data='data'):
   mnist = MNIST(path_to_data, download=True, transform=all_transforms)
   return DataLoader(mnist, batch_size=batch_size, shuffle=True)
 
+
+def get_mnist_test():
+  all_transforms = transforms.Compose([
+    transforms.Resize(32),
+    transforms.ToTensor()
+  ])
+  test_data = datasets.MNIST('../mnist', train=False,
+    transform=all_transforms, download=True)
+  return test_data
+
