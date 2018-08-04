@@ -24,20 +24,32 @@ class Visualizer():
     self.dataset = dataset
     self.trav_imgs = self._get_trav_imgs(nb_trav)
   
-  def _get_trav_imgs(self, nb_trav, first=None):
+
+  def _get_trav_imgs(self, nb_trav, first_idx=None):
     indices = random.sample(range(1, len(self.dataset)), nb_trav)
-    if first is not None: indices[0] = first
+    if first_idx is not None: indices[0] = first_idx
     imgs = []
     for i, img_idx in enumerate(indices): 
       img = self.dataset[img_idx][0]
       imgs.append(img)
     return torch.stack(imgs).to(self.device)
       
+
   @temp_eval
   def recon(self, step):
+    imgs = []
+    for i in range(50):
+      img = self.dataset[i][0]
+      imgs.append(img)
+    imgs = torch.stack(imgs).to(self.device)
+    recons, _, _ = self.model(imgs)
+    canvas = torch.cat((imgs, recons), dim=1)
+    canvas = canvas.view(-1, 1, *canvas.shape[2:])
+    
     filename = 'recon_' + str(step) + '.png'
-    filepath = os.path.join(self.logdir, filename)
-    pass  # TODO!
+    save_path = os.path.join(self.logdir, filename)
+    save_image(canvas, save_path, nrow=10, pad_value=1)
+
 
   @temp_eval
   def traverse(self, step):

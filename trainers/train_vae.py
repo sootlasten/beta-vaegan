@@ -64,5 +64,5 @@ class Trainer(BaseTrainer):
           torch.save(self.nets['vae'], filepath)
 
           self.vis.traverse(step)
-          #self.vis.recon(step)
+          self.vis.recon(step)
 
