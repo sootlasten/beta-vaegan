@@ -3,7 +3,6 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from vis.vis import traverse
 from .utils import BaseTrainer, kl_gauss_unag, \
   kl_cat_unag, sse_loss, overrides  
 
@@ -90,13 +89,12 @@ class Trainer(BaseTrainer):
         self.logger.log_val('cat kl', kl_cats.data.cpu().numpy())
           
         if not step % self.args.log_interval:
-          self.logger.print(step)
+          self.logger.print_and_save(step)
         
         if not step % self.args.save_interval:
           filepath = os.path.join(self.args.logdir, 'model.ckpt')
           torch.save(self.nets['vae'], filepath)
 
-          filename = 'traversal_' + str(step) + '.png'
-          filepath = os.path.join(self.args.logdir, filename)
-          traverse(self.nets['vae'], self.testimgs, filepath)
+          self.vis.traverse(step)
+          self.vis.recon(step)
 

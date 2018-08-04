@@ -57,7 +57,7 @@ class Trainer(BaseTrainer):
         self.logger.log_val('cat kl', kl_cats.data.cpu().numpy())
   
         if not step % self.args.log_interval:
-          self.logger.print(step)
+          self.logger.print_and_save(step)
         
         if not step % self.args.save_interval:
           filepath = os.path.join(self.args.logdir, 'model.ckpt')

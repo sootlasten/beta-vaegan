@@ -38,7 +38,7 @@ class BaseTrainer(ABC):
     self.dataloader = dataloader
     self.vis = vis
     self.device = device
-    self.logger = Logger(self.args.steps)
+    self.logger = Logger(self.args.logdir, self.args.steps)
   
   def get_cap_loss(self, kl, step):
     cap = (self.args.cap_max - self.args.cap_min)* \
