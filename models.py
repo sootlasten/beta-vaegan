@@ -8,7 +8,7 @@ from utils.model_utils import *
 
 def _encoder(img_dims, nb_latents, norm, nonl, out_nonl):
   enc_layers = []
-  enc_layers.extend(conv_block(1, 32, norm, nonl))
+  enc_layers.extend(conv_block(img_dims[0], 32, norm, nonl))
   enc_layers.extend(conv_block(32, 32, norm, nonl))
   enc_layers.extend(conv_block(32, 64, norm, nonl))
   if img_dims[1:] == (64, 64): 
@@ -28,7 +28,7 @@ def _decoder(img_dims, nb_latents, norm, nonl, out_nonl):
     dec_layers.extend(deconv_block(64, 64, norm, nonl)),
   dec_layers.extend(deconv_block(64, 32, norm, nonl)),
   dec_layers.extend(deconv_block(32, 32, norm, nonl)),
-  dec_layers.extend(deconv_block(32, 1, False, out_nonl))
+  dec_layers.extend(deconv_block(32, img_dims[0], False, out_nonl))
   return nn.Sequential(*dec_layers)
 
 

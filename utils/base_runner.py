@@ -10,12 +10,14 @@ from functools import reduce, wraps
 import torch
 
 from .vis_utils import Visualizer
-from loaders.dsprites import get_dsprites_dataloader
+from loaders.celeba import get_celeba_dataloader, get_celeba_test
 from loaders.mnist import get_mnist_dataloader, get_mnist_test
+from loaders.dsprites import get_dsprites_dataloader
 from loaders.blobs import get_blobs_dataloader
 
 
 DATASETS = {
+  'celeba': [(3, 64, 64), get_celeba_dataloader, get_celeba_test],
   'mnist': [(1, 32, 32), get_mnist_dataloader, get_mnist_test],
   'dsprites': [(1, 64, 64), get_dsprites_dataloader, None],
   'blobs': [(1, 32, 32), get_blobs_dataloader, None]}
@@ -53,7 +55,7 @@ def get_common_parser():
                       help='min capacity for KL')
   parser.add_argument('--cap-max', type=float, default=25,
                       help='max capacity for KL')
-  parser.add_argument('--cap-iters', type=int, default=100000,
+  parser.add_argument('--cap-iters', type=int, default=250000,
                       help='number of iters to increase the capacity over')
   parser.add_argument('--temp', type=float, default=0.1,
                       help='temperature for gumbel-softmax')
@@ -65,7 +67,7 @@ def get_common_parser():
                             0 if no cat variables.')
   parser.add_argument('--dataset', type=str, required=True,
                       help='The dataset to use for training \
-                           (blobs | dsprites | mnist | celeba)')
+                           (celeba | mnist | dsprites | blobs)')
   parser.add_argument('--batch-size', type=int, default=64)
   parser.add_argument('--steps', type=int, default=100000,
                       help='number of batches to train for')

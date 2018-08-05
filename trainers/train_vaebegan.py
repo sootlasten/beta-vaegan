@@ -89,12 +89,13 @@ class Trainer(BaseTrainer):
         self.logger.log_val('cat kl', kl_cats.data.cpu().numpy())
           
         if not step % self.args.log_interval:
-          self.logger.print_and_save(step)
+          self.logger.print(step)
         
         if not step % self.args.save_interval:
           filepath = os.path.join(self.args.logdir, 'model.ckpt')
           torch.save(self.nets['vae'], filepath)
 
+          self.logger.save(step)
           self.vis.traverse(step)
           self.vis.recon(step)
 

@@ -16,9 +16,12 @@ class Logger():
       self.stats[key] = self.stats[key]*0.99 + val*0.01
     else: self.stats[key] = val
   
-  def print_and_save(self, step):
+  def print(self, step):
     info_str = self._gen_info_str(step)
     print(info_str)
+
+  def save(self, step):
+    info_str = self._gen_info_str(step)
     with open(self.logfile_path, 'a') as f: 
       f.write(info_str + '\n')
   

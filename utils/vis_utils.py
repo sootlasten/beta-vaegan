@@ -23,28 +23,25 @@ class Visualizer():
     self.logdir = logdir
     self.dataset = dataset
     self.trav_imgs = self._get_trav_imgs(nb_trav)
-  
 
   def _get_trav_imgs(self, nb_trav, first_idx=None):
     indices = random.sample(range(1, len(self.dataset)), nb_trav)
     if first_idx is not None: indices[0] = first_idx
     imgs = []
-    for i, img_idx in enumerate(indices): 
-      img = self.dataset[img_idx][0]
+    for i, img_idx in enumerate(indices):
+      img = self.dataset[img_idx]
       imgs.append(img)
     return torch.stack(imgs).to(self.device)
-      
 
   @temp_eval
   def recon(self, step):
     imgs = []
     for i in range(50):
-      img = self.dataset[i][0]
+      img = self.dataset[i]
       imgs.append(img)
     imgs = torch.stack(imgs).to(self.device)
     recons, _, _ = self.model(imgs)
-    canvas = torch.cat((imgs, recons), dim=1)
-    canvas = canvas.view(-1, 1, *canvas.shape[2:])
+    canvas = torch.cat((imgs, recons), dim=0)
     
     filename = 'recon_' + str(step) + '.png'
     save_path = os.path.join(self.logdir, filename)
@@ -54,7 +51,7 @@ class Visualizer():
   @temp_eval
   def traverse(self, step):
     recons, z, dist_params = self.model(self.trav_imgs)
-    canvas = torch.cat((self.trav_imgs, recons), dim=1)
+    canvas = torch.cat((self.trav_imgs, recons), dim=0)
     nb_cols = len(self.trav_imgs)
       
     # traverse continuous 
@@ -68,7 +65,7 @@ class Visualizer():
         temp_latents = latents.repeat(nb_cols, 1)
         temp_latents[:, i] = trav_range
         recons = self.model.decoder(temp_latents)
-        canvas = torch.cat((canvas, recons), dim=1)
+        canvas = torch.cat((canvas, recons), dim=0)
     else:
       cont_dim = 0
       latents = z[0] 
@@ -83,10 +80,7 @@ class Visualizer():
         recon = self.model.decoder(temp_latents)
         row = torch.ones(nb_cols, *recon.shape[1:]).to(self.device)
         row[:d] = recon
-        canvas = torch.cat((canvas, row), dim=1)
-    
-    img_size = canvas.shape[2:]
-    canvas = canvas.transpose(0, 1).contiguous().view(-1, 1, *img_size)
+        canvas = torch.cat((canvas, row), dim=0)
     
     filename = 'traversal_' + str(step) + '.png'
     save_path = os.path.join(self.logdir, filename)
