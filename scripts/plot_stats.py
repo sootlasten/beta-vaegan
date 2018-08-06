@@ -8,14 +8,14 @@ import matplotlib.pyplot as plt
 def plot_scals(scals_dict): 
   for key, val in scals_dict.items():
     plt.plot(val)
-    plt.xlabel(key)
+    plt.title(key)
     plt.show()
 
 
 def plot_seqs(seqs_dict):
   for key, val in seqs_dict.items():
     plt.plot(np.array(val))
-    plt.xlabel(key)
+    plt.title(key)
     plt.show()
 
 
