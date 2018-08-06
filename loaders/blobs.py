@@ -30,11 +30,12 @@ class BlobsLoader():
       batch = queue.get()
   
   def _gen_batches(self, batch_size):
-    imgs = []
+    imgs = np.zeros((batch_size, self.dataset.canvas_len, 
+      self.dataset.canvas_len), dtype=np.float32)
     while True:
       for i in range(batch_size): 
-        imgs.append(self.dataset.make_rand_img())
-      yield torch.stack(imgs)
+        imgs[i] = self.dataset.make_rand_img()
+      yield torch.tensor(imgs).unsqueeze(1)
   
   def __len__(self):
     return int(np.ceil(len(self.dataset) // self.batch_size))

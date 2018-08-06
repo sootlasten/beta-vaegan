@@ -6,7 +6,7 @@ from utils.misc import overrides
 from .data_util import DataUtil
 
 
-DSPRITES_PATH = '/home/stensootla/projects/dsprites-dataset/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz'
+DSPRITES_PATH = '/home/stensootla/projects/datasets/dsprites/dsprites_ndarray_co1sh3sc6or40x32y32_64x64.npz'
 
 class SpritesDataset(Dataset):
   def __init__(self):

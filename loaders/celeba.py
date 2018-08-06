@@ -7,8 +7,8 @@ from utils.misc import overrides
 from .data_util import DataUtil
 
 
-IMGDIR = '/home/stensootla/projects/celeba/resized/'
-PARTITION_INFO_FILE = '/home/stensootla/projects/celeba/list_eval_partition.csv'
+IMGDIR = '/home/stensootla/projects/datasets/celeba/resized/'
+PARTITION_INFO_FILE = '/home/stensootla/projects/datasets/celeba/list_eval_partition.csv'
 
 class CelebADataset(Dataset):
   def __init__(self, train=True, transform=None):

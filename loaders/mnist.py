@@ -14,6 +14,8 @@ from utils.misc import overrides
 from .data_util import DataUtil
 
 
+MNIST_PATH = '/home/stensootla/projects/datasets/mnist'
+
 class MNIST(data.Dataset):
   urls = [
       'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz',
@@ -122,13 +124,13 @@ class MNISTUtil(DataUtil):
 
   @overrides(DataUtil)
   def get_trainloader(self, batch_size):
-    mnist = MNIST('../mnist', download=True, transform=self.transforms)
+    mnist = MNIST(MNIST_PATH, download=True, transform=self.transforms)
     mnist_loader = DataLoader(mnist, batch_size=batch_size, shuffle=True)
     return mnist_loader
   
   @property
   @overrides(DataUtil)
   def testdata(self):
-    test_data = MNIST('../mnist', train=False, download=True, transform=self.transforms)
+    test_data = MNIST(MNIST_PATH, train=False, download=True, transform=self.transforms)
     return test_data
 
