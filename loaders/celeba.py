@@ -3,6 +3,9 @@ from skimage.io import imread
 from torch.utils.data import Dataset, DataLoader
 from torchvision import datasets, transforms
 
+from utils.misc import overrides
+from .data_util import DataUtil
+
 
 IMGDIR = '/home/stensootla/projects/celeba/resized/'
 PARTITION_INFO_FILE = '/home/stensootla/projects/celeba/list_eval_partition.csv'
@@ -37,12 +40,18 @@ class CelebADataset(Dataset):
       img = self.transform(img)
     return img
 
-def get_celeba_dataloader(batch_size):
-  celeba_data = CelebADataset(transform=transforms.ToTensor())
-  return DataLoader(celeba_data, batch_size=batch_size, shuffle=True)
 
-def get_celeba_testdata():
-  test_data = CelebADataset(train=False, 
-    transform=transforms.ToTensor())
-  return test_data
+class CelebAUtil(DataUtil):
+  def __init__(self):
+    self.transforms = transforms.ToTensor()
+
+  @overrides(DataUtil)
+  def get_trainloader(batch_size):
+    celeba_data = CelebADataset(transform=self.transforms)
+    return DataLoader(celeba_data, batch_size=batch_size, shuffle=True)
+  
+  @property
+  @overrides(DataUtil)
+  def testdata(self):
+    return CelebADataset(train=False, transform=self.transforms)
 

@@ -4,8 +4,9 @@ import torch
 from torch.nn import functional as F
 from torchvision.utils import save_image
 
+from utils.misc import overrides
 from .utils import BaseTrainer, kl_gauss_unag, \
-  sse_loss, bce_loss, kl_cat_unag, overrides  
+  sse_loss, bce_loss, kl_cat_unag
 
 
 class Trainer(BaseTrainer):

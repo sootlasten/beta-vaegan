@@ -10,6 +10,9 @@ from torchvision import transforms
 from torchvision.datasets.utils import download_url
 from torchvision.datasets.mnist import read_image_file
 
+from utils.misc import overrides
+from .data_util import DataUtil
+
 
 class MNIST(data.Dataset):
   urls = [
@@ -109,20 +112,23 @@ class MNIST(data.Dataset):
 
     print('Done!')
 
-def get_mnist_dataloader(batch_size):
-  all_transforms = transforms.Compose([
-    transforms.Resize(32),
-    transforms.ToTensor()
-  ])
-  mnist = MNIST('../mnist', download=True, transform=all_transforms)
-  mnist_loader = DataLoader(mnist, batch_size=batch_size, shuffle=True)
-  return mnist_loader
 
-def get_mnist_testdata():
-  all_transforms = transforms.Compose([
-    transforms.Resize(32),
-    transforms.ToTensor()
-  ])
-  test_data = MNIST('../mnist', train=False, download=True, transform=all_transforms)
-  return test_data
+class MNISTUtil(DataUtil):
+  def __init__(self): 
+    self.transforms = transforms.Compose([
+      transforms.Resize(32),
+      transforms.ToTensor()
+    ])
+
+  @overrides(DataUtil)
+  def get_trainloader(self, batch_size):
+    mnist = MNIST('../mnist', download=True, transform=self.transforms)
+    mnist_loader = DataLoader(mnist, batch_size=batch_size, shuffle=True)
+    return mnist_loader
+  
+  @property
+  @overrides(DataUtil)
+  def testdata(self):
+    test_data = MNIST('../mnist', train=False, download=True, transform=self.transforms)
+    return test_data
 

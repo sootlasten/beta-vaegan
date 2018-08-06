@@ -3,6 +3,9 @@ import numpy as np
 from scipy.stats import multivariate_normal
 import torch
 
+from utils.misc import overrides
+from .data_util import DataUtil
+
 
 class BlobsLoader():
   def __init__(self, dataset, batch_size, nb_cores):
@@ -80,11 +83,16 @@ class BlobsDataset():
   def _normalize(x):
     """Normalize array so that all elements are between 0 and 1."""
     return (x - x.min()) / (x.max() - x.min())
-  
-def get_blobs_dataloader(batch_size):
-  dataset = BlobsDataset(canvas_len=32, std=4, nb_particles=10000)
-  return BlobsLoader(dataset, batch_size, nb_cores=4)
 
-def get_blobs_testdata():
-  return BlobsDataset(canvas_len=32, std=4, nb_particles=10000)
+
+class BlobsUtil(DataUtil):
+  @overrides(DataUtil)
+  def get_trainloader(self, batch_size):
+    dataset = BlobsDataset(canvas_len=32, std=4, nb_particles=10000)
+    return BlobsLoader(dataset, batch_size, nb_cores=4)
+
+  @property
+  @overrides(DataUtil)
+  def testdata(self):
+    return BlobsDataset(canvas_len=32, std=4, nb_particles=10000)
 

@@ -10,25 +10,26 @@ from functools import reduce, wraps
 import torch
 
 from .vis_utils import Visualizer
-from loaders.celeba import get_celeba_dataloader, get_celeba_testdata
-from loaders.mnist import get_mnist_dataloader, get_mnist_testdata
-from loaders.dsprites import get_dsprites_dataloader, get_dsprites_testdata
-from loaders.blobs import get_blobs_dataloader, get_blobs_testdata
+from loaders.celeba import CelebAUtil
+from loaders.mnist import MNISTUtil
+from loaders.dsprites import SpritesUtil
+from loaders.blobs import BlobsUtil
 
 
 DATASETS = {
-  'celeba': [(3, 64, 64), get_celeba_dataloader, get_celeba_testdata],
-  'mnist': [(1, 32, 32), get_mnist_dataloader, get_mnist_testdata],
-  'dsprites': [(1, 64, 64), get_dsprites_dataloader, get_dsprites_testdata],
-  'blobs': [(1, 32, 32), get_blobs_dataloader, get_blobs_testdata]}
+  'celeba': [(3, 64, 64), CelebAUtil],
+  'mnist': [(1, 32, 32), MNISTUtil],
+  'dsprites': [(1, 64, 64), SpritesUtil],
+  'blobs': [(1, 32, 32), BlobsUtil]}
 
 
 def _get_dataset(data_arg):
   """Checks if the given dataset is available. If yes, returns
-     the input dimensions and dataloader."""
+     the input dimensions and datautil."""
   if data_arg not in DATASETS:
     raise ValueError("Dataset not available!")
-  return DATASETS[data_arg]
+  img_size, datautil = DATASETS[data_arg]
+  return img_size, datautil()
 
 
 def _check_dim_args(cont_dim, cat_dims):
@@ -92,8 +93,8 @@ def base_runner(setup_models):
     device = torch.device('cuda' if use_cuda else 'cpu')
     
     # data loader
-    img_dims, dataloader, testdata = _get_dataset(args.dataset)
-    dataloader = dataloader(args.batch_size)
+    img_dims, datautil = _get_dataset(args.dataset)
+    trainloader = datautil.get_trainloader(args.batch_size)
 
     # models and optimizers
     cont_dim, cat_dims = _check_dim_args(args.cont_dim, args.cat_dims)
@@ -105,15 +106,11 @@ def base_runner(setup_models):
     os.makedirs(args.logdir)
   
     # visualizer
-    if not testdata:
-      raise NotImplementedError("Gathering test data for this \
-        dataset not implemented yet!")
-    testdata = testdata()
     vis = Visualizer(nets['vae'], device,   
-      args.logdir, testdata, args.nb_trav)
+      args.logdir, datautil.testdata, args.nb_trav)
     
     # train
-    trainer = trainer(args, nets, optimizers, dataloader, vis, device)
+    trainer = trainer(args, nets, optimizers, trainloader, vis, device)
     trainer.put_in_work()
   return wrapper
 

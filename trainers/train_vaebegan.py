@@ -3,8 +3,9 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
+from utils.misc import overrides
 from .utils import BaseTrainer, kl_gauss_unag, \
-  kl_cat_unag, sse_loss, overrides  
+  kl_cat_unag, sse_loss
 
 
 def l1_loss(source, target):
