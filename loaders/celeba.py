@@ -46,7 +46,7 @@ class CelebAUtil(DataUtil):
     self.transforms = transforms.ToTensor()
 
   @overrides(DataUtil)
-  def get_trainloader(batch_size):
+  def get_trainloader(self, batch_size):
     celeba_data = CelebADataset(transform=self.transforms)
     return DataLoader(celeba_data, batch_size=batch_size, shuffle=True)
   
