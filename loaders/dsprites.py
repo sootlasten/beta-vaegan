@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -13,10 +14,13 @@ class SpritesDataset(Dataset):
     return len(self.imgs)
       
   def __getitem__(self, idx):
-    return self.imgs[idx].astype(np.float32)
+    img = self.imgs[idx].astype(np.float32)
+    return torch.tensor(img).unsqueeze(0)
 
-
-def get_dsprites_dataloader(batch_size, shuffle=True):
+def get_dsprites_dataloader(batch_size):
   sprite_dataset = SpritesDataset()
-  return DataLoader(sprite_dataset, batch_size=batch_size, shuffle=shuffle)
+  return DataLoader(sprite_dataset, batch_size=batch_size, shuffle=True)
+
+def get_dsprites_testdata():
+  return SpritesDataset()
 

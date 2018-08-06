@@ -27,12 +27,11 @@ class BlobsLoader():
       batch = queue.get()
   
   def _gen_batches(self, batch_size):
-    imgs = np.zeros((batch_size, self.dataset.canvas_len, 
-      self.dataset.canvas_len), dtype=np.float32)
+    imgs = []
     while True:
       for i in range(batch_size): 
-        imgs[i] = self.dataset.make_rand_img()
-      yield torch.tensor(imgs)
+        imgs.append(self.dataset.make_rand_img())
+      yield torch.stack(imgs)
   
   def __len__(self):
     return int(np.ceil(len(self.dataset) // self.batch_size))
@@ -54,6 +53,7 @@ class BlobsDataset():
     shades, (xs, ys) = self._make_blob_coords(cx, cy)
     canvas = np.zeros((self.canvas_len, self.canvas_len), dtype=np.float32)
     canvas[xs, ys] = shades[:, np.newaxis]
+    canvas = torch.tensor(canvas).unsqueeze(0)
     return canvas
       
   def _make_blob_coords(self, x, y):
@@ -81,8 +81,10 @@ class BlobsDataset():
     """Normalize array so that all elements are between 0 and 1."""
     return (x - x.min()) / (x.max() - x.min())
   
-
 def get_blobs_dataloader(batch_size):
   dataset = BlobsDataset(canvas_len=32, std=4, nb_particles=10000)
   return BlobsLoader(dataset, batch_size, nb_cores=4)
+
+def get_blobs_testdata():
+  return BlobsDataset(canvas_len=32, std=4, nb_particles=10000)
 

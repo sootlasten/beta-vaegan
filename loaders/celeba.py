@@ -7,7 +7,6 @@ from torchvision import datasets, transforms
 IMGDIR = '/home/stensootla/projects/celeba/resized/'
 PARTITION_INFO_FILE = '/home/stensootla/projects/celeba/list_eval_partition.csv'
 
-
 class CelebADataset(Dataset):
   def __init__(self, train=True, transform=None):
     self.img_paths = CelebADataset._get_img_paths(train)
@@ -38,14 +37,11 @@ class CelebADataset(Dataset):
       img = self.transform(img)
     return img
 
-
-def get_celeba_dataloader(batch_size=64):
+def get_celeba_dataloader(batch_size):
   celeba_data = CelebADataset(transform=transforms.ToTensor())
-  celeba_loader = DataLoader(celeba_data, batch_size=batch_size, shuffle=True)
-  return celeba_loader
+  return DataLoader(celeba_data, batch_size=batch_size, shuffle=True)
 
-
-def get_celeba_test():
+def get_celeba_testdata():
   test_data = CelebADataset(train=False, 
     transform=transforms.ToTensor())
   return test_data

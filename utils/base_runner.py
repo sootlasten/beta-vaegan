@@ -10,17 +10,17 @@ from functools import reduce, wraps
 import torch
 
 from .vis_utils import Visualizer
-from loaders.celeba import get_celeba_dataloader, get_celeba_test
-from loaders.mnist import get_mnist_dataloader, get_mnist_test
-from loaders.dsprites import get_dsprites_dataloader
-from loaders.blobs import get_blobs_dataloader
+from loaders.celeba import get_celeba_dataloader, get_celeba_testdata
+from loaders.mnist import get_mnist_dataloader, get_mnist_testdata
+from loaders.dsprites import get_dsprites_dataloader, get_dsprites_testdata
+from loaders.blobs import get_blobs_dataloader, get_blobs_testdata
 
 
 DATASETS = {
-  'celeba': [(3, 64, 64), get_celeba_dataloader, get_celeba_test],
-  'mnist': [(1, 32, 32), get_mnist_dataloader, get_mnist_test],
-  'dsprites': [(1, 64, 64), get_dsprites_dataloader, None],
-  'blobs': [(1, 32, 32), get_blobs_dataloader, None]}
+  'celeba': [(3, 64, 64), get_celeba_dataloader, get_celeba_testdata],
+  'mnist': [(1, 32, 32), get_mnist_dataloader, get_mnist_testdata],
+  'dsprites': [(1, 64, 64), get_dsprites_dataloader, get_dsprites_testdata],
+  'blobs': [(1, 32, 32), get_blobs_dataloader, get_blobs_testdata]}
 
 
 def _get_dataset(data_arg):

@@ -15,7 +15,6 @@ class Trainer(BaseTrainer):
   @overrides(BaseTrainer)
   def put_in_work(self):
     """Puts in work like a man possessed."""
-    bce = F.binary_cross_entropy_with_logits
     epochs = int(np.ceil(self.args.steps / len(self.dataloader)))
     step = 0
     for _ in range(epochs):
@@ -24,7 +23,7 @@ class Trainer(BaseTrainer):
         if step > self.args.steps: return
     
         # 1. optimize GAN discriminator
-        x = x.unsqueeze(1).to(self.device)
+        x = x.to(self.device)
         x_recon_disc, _ = self.nets['disc'](x)
         real_loss = l1_loss(x_recon_disc, x)
         x_fake = self.nets['vae'].sample(len(x)).detach()

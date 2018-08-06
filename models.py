@@ -36,6 +36,7 @@ class VAE(nn.Module):
   def __init__(self, img_dims, cont_dim, cat_dims, temp):
     super(VAE, self).__init__()
   
+    self.in_dim = img_dims
     self.cont_dim = [] if not cont_dim else 2*[cont_dim]
     self.cat_dims = cat_dims
     self.chunk_sizes = self.cont_dim + self.cat_dims
@@ -105,7 +106,7 @@ class Discriminator(nn.Module):
     self.encoder = _encoder(img_dims, nb_latents, norm=True, 
       nonl=nn.ReLU(), out_nonl=None)
     self.decoder = _decoder(img_dims, nb_latents, norm=True,
-      nonl=nn.ReLU(), out_nonl=None)
+      nonl=nn.ReLU(), out_nonl=nn.Sigmoid())
       
   def forward(self, x, extract_idx=4, full=True):
     featmap = None

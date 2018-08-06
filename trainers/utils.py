@@ -18,6 +18,11 @@ def kl_cat_unag(logits):
   return q_z*(torch.log(q_z + 1e-20) - np.log(1 / logits.size(1)))
 
 
+def bce_loss(source, target):
+  return F.binary_cross_entropy(source, 
+    target, reduce=False).mean(0).sum()
+
+
 def sse_loss(source, target):
   return 0.5*(source - target).pow(2).mean(0).sum()
 

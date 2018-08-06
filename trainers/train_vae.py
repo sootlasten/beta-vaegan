@@ -5,7 +5,7 @@ from torch.nn import functional as F
 from torchvision.utils import save_image
 
 from .utils import BaseTrainer, kl_gauss_unag, \
-  sse_loss, kl_cat_unag, overrides  
+  sse_loss, bce_loss, kl_cat_unag, overrides  
 
 
 class Trainer(BaseTrainer):
@@ -14,6 +14,11 @@ class Trainer(BaseTrainer):
     """Puts in work like a man possessed."""
     epochs = int(np.ceil(self.args.steps / len(self.dataloader)))
     step = 0
+    
+    if self.nets['vae'].in_dim[0] == 3: 
+      recon_func = sse_loss
+    else: recon_func = bce_loss
+
     for _ in range(epochs):
       for x in self.dataloader:
         step += 1
@@ -22,8 +27,7 @@ class Trainer(BaseTrainer):
         # 1. optimize VAE
         x = x.to(self.device)
         recon_batch, z, dist_params = self.nets['vae'](x)
-        recon_loss = F.binary_cross_entropy(
-          recon_batch, x, reduce=False).mean(0).sum()
+        recon_loss = recon_func(recon_batch, x)
         pw_sse = sse_loss(x, recon_batch)  # for logging
     
         # KL for gaussian
