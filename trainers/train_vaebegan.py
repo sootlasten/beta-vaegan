@@ -85,8 +85,8 @@ class Trainer(BaseTrainer):
         self.logger.log_val('fw_sse', fw_sse.item())
         self.logger.log_val('M', M)
         self.logger.log_val('cur_cap', self.cur_cap)
-        self.logger.log_val('cont kl', kl_cont_dw.data.cpu().numpy())
-        self.logger.log_val('cat kl', kl_cats.data.cpu().numpy())
+        self.logger.log_val('cont_kl', kl_cont_dw.data.cpu().numpy())
+        self.logger.log_val('cat_kl', kl_cats.data.cpu().numpy())
           
         if not step % self.args.log_interval:
           self.logger.print(step)
