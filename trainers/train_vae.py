@@ -58,6 +58,7 @@ class Trainer(BaseTrainer):
         self.logger.log_val('pw_sse', pw_sse.item())
         self.logger.log_val('recon_loss', recon_loss.item())
         self.logger.log_val('vae_loss', vae_loss.item())
+        self.logger.log_val('cur_cap', self.cur_cap)
         self.logger.log_val('cont kl', kl_cont_dw.data.cpu().numpy())
         self.logger.log_val('cat kl', kl_cats.data.cpu().numpy())
   

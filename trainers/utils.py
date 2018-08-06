@@ -28,20 +28,21 @@ def sse_loss(source, target):
 
 
 class BaseTrainer(ABC):
-  def __init__(self, args, nets, opt, dataloader, vis, device):
+  def __init__(self, args, nets, opt, dataloader, vis, logger, device):
     self.args = args
     self.nets = nets
     self.opt = opt
     self.dataloader = dataloader
     self.vis = vis
+    self.logger = logger
     self.device = device
-    self.logger = Logger(self.args.logdir, self.args.steps)
+    self.cur_cap = self.args.cap_min
   
   def get_cap_loss(self, kl, step):
     cap = (self.args.cap_max - self.args.cap_min)* \
       step/self.args.cap_iters
-    cap = min(cap, self.args.cap_max)
-    return self.args.cap_coeff*torch.abs(cap - kl)
+    self.cur_cap = min(cap, self.args.cap_max)
+    return self.args.cap_coeff*torch.abs(self.cur_cap - kl)
 
   @abstractmethod
   def put_in_work():

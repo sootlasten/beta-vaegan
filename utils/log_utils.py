@@ -10,12 +10,17 @@ class Logger():
     self.stats = OrderedDict()
     self.total_steps = total_steps
     self.logfile_path = os.path.join(logdir, LOG_FILENAME)
-  
-  def log_val(self, key, val):
+
+  def log_val(self, key, val, runavg=True):
     if key in self.stats: 
-      self.stats[key] = self.stats[key]*0.99 + val*0.01
+      if runavg: self.stats[key] = self.stats[key]*0.99 + val*0.01
+      else: self.stats[key] = val
     else: self.stats[key] = val
   
+  def save_args(self, args):
+    with open(self.logfile_path, 'a') as f: 
+      f.write(str(args) + '\n\n')
+    
   def print(self, step):
     info_str = self._gen_info_str(step)
     print(info_str)
@@ -33,3 +38,4 @@ class Logger():
       else: s = "{:.4f}".format(v)
       info_str += "{}: {}\n".format(k, s)
     return info_str
+

@@ -40,9 +40,8 @@ class Trainer(BaseTrainer):
         _, x_recon_disc_fmap = self.nets['disc'](x_recon, full=False)
         _, x_disc_fmap = self.nets['disc'](x, full=False)
         fw_sse = sse_loss(x_recon_disc_fmap, x_disc_fmap)
-        pw_bce = F.binary_cross_entropy(
-          x_recon, x, reduce=False).mean(0).sum()  # for logging
-      
+        pw_sse = sse_loss(x_recon, x)  # for logging
+              
         x_fake = self.nets['vae'].sample(len(x)).detach()
         x_fake_recon, _ = self.nets['disc'](x_fake)
         gan_gen_loss = l1_loss(x_fake_recon, x_fake)
@@ -82,9 +81,10 @@ class Trainer(BaseTrainer):
         M = real_loss.item() + np.abs(balance)
 
         # log...
-        self.logger.log_val('pw_bce', pw_bce.item())
+        self.logger.log_val('pw_sse', pw_sse.item())
         self.logger.log_val('fw_sse', fw_sse.item())
         self.logger.log_val('M', M)
+        self.logger.log_val('cur_cap', self.cur_cap)
         self.logger.log_val('cont kl', kl_cont_dw.data.cpu().numpy())
         self.logger.log_val('cat kl', kl_cats.data.cpu().numpy())
           

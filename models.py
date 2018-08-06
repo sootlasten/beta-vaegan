@@ -44,7 +44,8 @@ class VAE(nn.Module):
 
     self.encoder = _encoder(img_dims, sum(self.chunk_sizes), 
       norm=False, nonl=nn.ReLU(), out_nonl=None)
-    self.decoder = _decoder(img_dims, sum(self.chunk_sizes)-cont_dim,      norm=False, nonl=nn.ReLU(), out_nonl=nn.Sigmoid())
+    self.decoder = _decoder(img_dims, sum(self.chunk_sizes)-cont_dim,   
+      norm=False, nonl=nn.ReLU(), out_nonl=nn.Sigmoid())
   
   @property
   def device(self):

@@ -10,6 +10,8 @@ from functools import reduce, wraps
 import torch
 
 from .vis_utils import Visualizer
+from utils.log_utils import Logger
+
 from loaders.celeba import CelebAUtil
 from loaders.mnist import MNISTUtil
 from loaders.dsprites import SpritesUtil
@@ -105,12 +107,14 @@ def base_runner(setup_models):
     if os.path.isdir(args.logdir): shutil.rmtree(args.logdir)
     os.makedirs(args.logdir)
   
-    # visualizer
+    # visualizer and logger
     vis = Visualizer(nets['vae'], device,   
       args.logdir, datautil.testdata, args.nb_trav)
+    logger = Logger(args.logdir, args.steps)
+    logger.save_args(args)
     
     # train
-    trainer = trainer(args, nets, optimizers, trainloader, vis, device)
+    trainer = trainer(args, nets, optimizers, trainloader, vis, logger, device)
     trainer.put_in_work()
   return wrapper
 
