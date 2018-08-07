@@ -17,6 +17,20 @@ def parse():
   return parser.parse_args()
 
 
+def _resize(img):
+  rescale_size = 64
+  bbox = (40, 218 - 30, 15, 178 - 15)
+  img = img[bbox[0]:bbox[1], bbox[2]:bbox[3]]
+  # Smooth image before resize to avoid moire patterns
+  scale = img.shape[0] / float(rescale_size)
+  sigma = numpy.sqrt(scale) / 2.0
+  img = filters.gaussian(img, sigma=sigma, multichannel=True)
+  img = transform.resize(img, 
+    (rescale_size, rescale_size, 3), order=3, mode="constant")
+  img = (img*255).astype(numpy.uint8)
+  return img
+
+
 def preprocess(args):
   if not os.path.isdir(args.target_dir):
     os.mkdir(args.target_dir)

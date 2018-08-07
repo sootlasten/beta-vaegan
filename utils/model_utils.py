@@ -15,15 +15,15 @@ class Reshape(nn.Module):
     return x.view(self.shape)
 
 
-def conv_block(in_c, out_c, norm, nonl):
-  layers = [nn.Conv2d(in_c, out_c, kernel_size=4, stride=2, padding=1)]
+def conv_block(in_c, out_c, norm, nonl, kernel_size=5, stride=2, padding=2):
+  layers = [nn.Conv2d(in_c, out_c, kernel_size=kernel_size, stride=stride, padding=padding)]
   if norm: layers.append(nn.BatchNorm2d(out_c))
   if nonl: layers.append(nonl)
   return layers
 
 
-def deconv_block(in_c, out_c, norm, nonl):
-  layers = [nn.ConvTranspose2d(in_c, out_c, kernel_size=4, stride=2, padding=1)] 
+def deconv_block(in_c, out_c, norm, nonl, kernel_size=5, stride=2, padding=2):
+  layers = [nn.ConvTranspose2d(in_c, out_c, kernel_size=kernel_size, stride=stride, padding=padding, output_padding=1)] 
   if norm: layers.append(nn.BatchNorm2d(out_c))
   if nonl: layers.append(nonl)
   return layers

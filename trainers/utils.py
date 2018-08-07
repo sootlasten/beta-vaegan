@@ -3,8 +3,6 @@ import numpy as np
 import torch
 from torch.nn import functional as F
 
-from utils.log_utils import Logger
-
 
 def kl_gauss_unag(mu, logvar):
   kld = -0.5*(1 + logvar - mu.pow(2) - logvar.exp())

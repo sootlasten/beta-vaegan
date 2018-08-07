@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -6,33 +7,25 @@ from torch.distributions.categorical import Categorical
 from utils.model_utils import *
 
 
-def _encoder(img_dims, nb_out, norm, nonl, 
-    out_nonl, first_norm_diff=False):
-  if first_norm_diff: first_norm = not norm
-  else: first_norm = norm
-  
+def _encoder(img_dims, nb_out, norm, nonl, out_nonl):
   enc_layers = []
-  enc_layers.extend(conv_block(img_dims[0], 32, first_norm, nonl))
-  enc_layers.extend(conv_block(32, 32, norm, nonl))
-  enc_layers.extend(conv_block(32, 64, norm, nonl))
-  if img_dims[1:] == (64, 64): 
-    enc_layers.extend(conv_block(64, 64, norm, nonl))
+  enc_layers.extend(conv_block(img_dims[0], 64, norm, nonl))
+  enc_layers.extend(conv_block(64, 128, norm, nonl))
+  enc_layers.extend(conv_block(128, 256, norm, nonl))
   enc_layers.append(Flatten())
-  enc_layers.extend(linear_block(64*4*4, 128, norm, nonl))
-  enc_layers.extend(linear_block(128, nb_out, False, out_nonl))
+  enc_layers.extend(linear_block(8*8*256, 1024, norm, nonl))
+  enc_layers.extend(linear_block(1024, nb_out, norm, nonl))
   return nn.Sequential(*enc_layers)
 
 
 def _decoder(img_dims, nb_latents, norm, nonl, out_nonl):
   dec_layers = []
-  dec_layers.extend(linear_block(nb_latents, 128, norm, nonl)),
-  dec_layers.extend(linear_block(128, 64*4*4, norm, nonl)),
-  dec_layers.append(Reshape(-1, 64, 4, 4)),
-  if img_dims[1:] == (64, 64):
-    dec_layers.extend(deconv_block(64, 64, norm, nonl)),
-  dec_layers.extend(deconv_block(64, 32, norm, nonl)),
-  dec_layers.extend(deconv_block(32, 32, norm, nonl)),
-  dec_layers.extend(deconv_block(32, img_dims[0], False, out_nonl))
+  dec_layers.extend(linear_block(nb_latents, 8*8*256, norm, nonl)),
+  dec_layers.append(Reshape(-1, 256, 8, 8)),
+  dec_layers.extend(deconv_block(256, 256, norm, nonl)),
+  dec_layers.extend(deconv_block(256, 128, norm, nonl)),
+  dec_layers.extend(deconv_block(128, 32, norm, nonl)),
+  dec_layers.extend(conv_block(32, img_dims[0], norm, nonl, stride=1))
   return nn.Sequential(*dec_layers)
 
 
@@ -46,10 +39,11 @@ class VAE(nn.Module):
     self.chunk_sizes = self.cont_dim + self.cat_dims
     self.temp = temp
 
+    # encoder
     self.encoder = _encoder(img_dims, sum(self.chunk_sizes), 
       norm=True, nonl=nn.ReLU(), out_nonl=None)
     self.decoder = _decoder(img_dims, sum(self.chunk_sizes)-cont_dim,   
-      norm=True, nonl=nn.ReLU(), out_nonl=nn.Sigmoid())
+      norm=True, nonl=nn.ReLU(), out_nonl=nn.Tanh())
   
   @property
   def device(self):
@@ -106,12 +100,33 @@ class VAE(nn.Module):
 class Discriminator(nn.Module):
   def __init__(self, img_dims):
     super(Discriminator, self).__init__()
+    self.extract_idx = 5 if img_dims[0] == 1 else 8
 
     # shares architecture with encoder for simplicity
-    self.layers = _encoder(img_dims, 1, norm=True, 
-      nonl=nn.ReLU(), out_nonl=nn.Sigmoid(), first_norm_diff=True)
-    self.extract_idx = 5 if img_dims[0] == 1 else 8
-          
+    nonl = nn.ReLU()
+    disc_layers = []
+    disc_layers.extend(conv_block(img_dims[0], 32, False, nonl, stride=1))
+    disc_layers.extend(conv_block(32, 128, True, nonl))
+    disc_layers.extend(conv_block(128, 256, True, nonl))
+    disc_layers.extend(conv_block(256, 256, True, nonl))
+    disc_layers.append(Flatten())
+    disc_layers.extend(linear_block(8*8*256, 512, True, nonl))
+    disc_layers.extend(linear_block(512, 1, False, nn.Sigmoid()))
+    self.layers = nn.Sequential(*disc_layers)
+    self._init_parameters()
+  
+  def _init_parameters(self):
+    for m in self.modules():
+      if isinstance(m, (nn.Conv2d, nn.ConvTranspose2d, nn.Linear)):
+        if hasattr(m, "weight") and m.weight is not None \
+            and m.weight.requires_grad:
+          # init as original implementation
+          scale = 1.0/np.sqrt(np.prod(m.weight.shape[1:]))
+          scale /= np.sqrt(3)
+          nn.init.uniform_(m.weight, -scale, scale)
+        if hasattr(m, "bias") and m.bias is not None and m.bias.requires_grad:
+          nn.init.constant_(m.bias, 0.0)
+
   def forward(self, x, full=True):
     featmap = None
     for i, layer in enumerate(self.layers):
