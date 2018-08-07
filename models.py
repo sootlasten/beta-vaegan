@@ -6,16 +6,20 @@ from torch.distributions.categorical import Categorical
 from utils.model_utils import *
 
 
-def _encoder(img_dims, nb_latents, norm, nonl, out_nonl):
+def _encoder(img_dims, nb_out, norm, nonl, 
+    out_nonl, first_norm_diff=False):
+  if first_norm_diff: first_norm = not norm
+  else: first_norm = norm
+  
   enc_layers = []
-  enc_layers.extend(conv_block(img_dims[0], 32, norm, nonl))
+  enc_layers.extend(conv_block(img_dims[0], 32, first_norm, nonl))
   enc_layers.extend(conv_block(32, 32, norm, nonl))
   enc_layers.extend(conv_block(32, 64, norm, nonl))
   if img_dims[1:] == (64, 64): 
     enc_layers.extend(conv_block(64, 64, norm, nonl))
   enc_layers.append(Flatten())
   enc_layers.extend(linear_block(64*4*4, 128, norm, nonl))
-  enc_layers.extend(linear_block(128, nb_latents, False, out_nonl))
+  enc_layers.extend(linear_block(128, nb_out, False, out_nonl))
   return nn.Sequential(*enc_layers)
 
 
@@ -35,17 +39,17 @@ def _decoder(img_dims, nb_latents, norm, nonl, out_nonl):
 class VAE(nn.Module):
   def __init__(self, img_dims, cont_dim, cat_dims, temp):
     super(VAE, self).__init__()
-  
     self.in_dim = img_dims
+
     self.cont_dim = [] if not cont_dim else 2*[cont_dim]
     self.cat_dims = cat_dims
     self.chunk_sizes = self.cont_dim + self.cat_dims
     self.temp = temp
 
     self.encoder = _encoder(img_dims, sum(self.chunk_sizes), 
-      norm=False, nonl=nn.ReLU(), out_nonl=None)
+      norm=True, nonl=nn.ReLU(), out_nonl=None)
     self.decoder = _decoder(img_dims, sum(self.chunk_sizes)-cont_dim,   
-      norm=False, nonl=nn.ReLU(), out_nonl=nn.Sigmoid())
+      norm=True, nonl=nn.ReLU(), out_nonl=nn.Sigmoid())
   
   @property
   def device(self):
@@ -100,21 +104,20 @@ class VAE(nn.Module):
 
 
 class Discriminator(nn.Module):
-  def __init__(self, img_dims, nb_latents):
+  def __init__(self, img_dims):
     super(Discriminator, self).__init__()
-    
-    # shares architecture with VAE for simplicity
-    self.encoder = _encoder(img_dims, nb_latents, norm=True, 
-      nonl=nn.ReLU(), out_nonl=None)
-    self.decoder = _decoder(img_dims, nb_latents, norm=True,
-      nonl=nn.ReLU(), out_nonl=nn.Sigmoid())
-      
-  def forward(self, x, extract_idx=4, full=True):
+
+    # shares architecture with encoder for simplicity
+    self.layers = _encoder(img_dims, 1, norm=True, 
+      nonl=nn.ReLU(), out_nonl=nn.Sigmoid(), first_norm_diff=True)
+    self.extract_idx = 5 if img_dims[0] == 1 else 8
+          
+  def forward(self, x, full=True):
     featmap = None
-    for i, layer in enumerate(self.encoder):
+    for i, layer in enumerate(self.layers):
       x = layer(x)
-      if i == extract_idx:
+      if i == self.extract_idx:
         if not full: return None, x
         else: featmap = x
-    return self.decoder(x), featmap
+    return x, featmap
 
